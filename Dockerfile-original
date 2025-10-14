@@ -1,0 +1,30 @@
+# ===== Stage 1: Build =====
+FROM gradle:8.5-jdk21-alpine AS builder
+WORKDIR /app
+
+COPY build.gradle settings.gradle ./
+RUN gradle clean build --no-daemon > /dev/null 2>&1 || true
+
+COPY src ./src
+RUN gradle bootJar --no-daemon
+
+RUN rm -rf /home/gradle/.gradle/caches /home/gradle/.gradle/daemon /home/gradle/.gradle/native
+
+RUN mkdir -p build/extracted && \
+    java -Djarmode=layertools -jar build/libs/*.jar extract --destination build/extracted
+
+
+# ===== Stage 2: Runtime =====
+FROM eclipse-temurin:21-jre-alpine AS runtime
+WORKDIR /app
+
+# Копируем только нужные слои из builder
+COPY --from=builder /app/build/extracted/dependencies/ ./
+COPY --from=builder /app/build/extracted/spring-boot-loader/ ./
+COPY --from=builder /app/build/extracted/application/ ./
+
+# Настройки JVM
+ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
+EXPOSE 8080
+
+ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]

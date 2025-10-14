@@ -5,7 +5,6 @@ plugins {
     id 'jacoco'
     id 'checkstyle'
     id 'com.diffplug.spotless' version '6.25.0'
-    id 'application'
 }
 
 group = 'ru.mentee.power'
@@ -47,8 +46,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-cache'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
     // Database
     runtimeOnly "com.h2database:h2:${versions.h2}"
@@ -109,13 +108,20 @@ dependencies {
     testImplementation 'io.rest-assured:xml-path:5.3.2'
 }
 
-application {
-    mainClass = 'ru.mentee.power.EmployeeManagementApplication'
-}
-
 bootJar {
     enabled = true
-    mainClass = 'ru.mentee.power.optimized.EmployeeManagementApplication'
+    layered {
+        enabled = true
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    manifest {
+        attributes 'Start-Class': 'ru.mentee.power.optimized.EmployeeManagementApplication'
+    }
+}
+
+jar {
+    enabled = false
 }
 
 checkstyle {
