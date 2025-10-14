@@ -1,9 +1,11 @@
 plugins {
     id 'java'
+    id 'org.springframework.boot' version '3.2.5'
+    id 'io.spring.dependency-management' version '1.1.4'
     id 'jacoco'
     id 'checkstyle'
-    id 'application'
     id 'com.diffplug.spotless' version '6.25.0'
+    id 'application'
 }
 
 group = 'ru.mentee.power'
@@ -19,6 +21,8 @@ repositories {
 
 ext {
     versions = [
+            springdoc        : '2.5.0',
+            postgresql       : '42.6.0',
             lombok           : '1.18.30',
             mapstruct        : '1.5.5.Final',
             mapstructLombok  : '0.2.0',
@@ -27,48 +31,91 @@ ext {
             junit            : '5.10.0',
             assertj          : '3.24.2',
             mockito          : '5.7.0',
+            testcontainers   : '1.19.7',
+            h2               : '2.2.224',
             googleJavaFormat : '1.17.0',
             jackson          : '2.17.0',
             jaxbApi          : '4.0.0',
-            jaxbRuntime      : '4.0.2'
+            jaxbRuntime      : '4.0.2',
+            caffeine         : '3.1.8'
     ]
 }
 
 dependencies {
+    // Spring Boot starters
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
+    // Database
+    runtimeOnly "com.h2database:h2:${versions.h2}"
+    testImplementation "com.h2database:h2:${versions.h2}"
+
+    // Validation
+    implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
+    implementation 'org.hibernate.validator:hibernate-validator:8.0.1.Final'
+
+    // Caching
+    implementation "com.github.ben-manes.caffeine:caffeine:${versions.caffeine}"
+
+    // Mapping
     implementation "org.mapstruct:mapstruct:${versions.mapstruct}"
     annotationProcessor "org.mapstruct:mapstruct-processor:${versions.mapstruct}"
     testAnnotationProcessor "org.mapstruct:mapstruct-processor:${versions.mapstruct}"
-
     annotationProcessor "org.projectlombok:lombok-mapstruct-binding:${versions.mapstructLombok}"
 
+    // Lombok
     compileOnly "org.projectlombok:lombok:${versions.lombok}"
     annotationProcessor "org.projectlombok:lombok:${versions.lombok}"
     testCompileOnly "org.projectlombok:lombok:${versions.lombok}"
     testAnnotationProcessor "org.projectlombok:lombok:${versions.lombok}"
 
+    // Logging
     implementation "org.slf4j:slf4j-api:${versions.slf4j}"
     implementation "ch.qos.logback:logback-classic:${versions.logback}"
     implementation "ch.qos.logback:logback-core:${versions.logback}"
 
+    // JSON/XML processing
     implementation "com.fasterxml.jackson.core:jackson-databind:${versions.jackson}"
     implementation "com.fasterxml.jackson.core:jackson-core:${versions.jackson}"
     implementation "com.fasterxml.jackson.core:jackson-annotations:${versions.jackson}"
     implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${versions.jackson}"
 
+    // XML binding
     implementation "jakarta.xml.bind:jakarta.xml.bind-api:${versions.jaxbApi}"
     implementation "org.glassfish.jaxb:jaxb-runtime:${versions.jaxbRuntime}"
 
+    // API documentation
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${versions.springdoc}"
+
+    // Testing
+    testImplementation platform("org.junit:junit-bom:${versions.junit}")
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation "org.mockito:mockito-core:${versions.mockito}"
+    testImplementation "org.mockito:mockito-junit-jupiter:${versions.mockito}"
+    testImplementation "org.assertj:assertj-core:${versions.assertj}"
+
+    // Test containers
+    testImplementation "org.testcontainers:testcontainers:${versions.testcontainers}"
+    testImplementation "org.testcontainers:junit-jupiter:${versions.testcontainers}"
+    testImplementation "org.testcontainers:postgresql:${versions.testcontainers}"
+
+    // REST testing
+    testImplementation 'io.rest-assured:rest-assured:5.3.2'
+    testImplementation 'io.rest-assured:json-path:5.3.2'
+    testImplementation 'io.rest-assured:xml-path:5.3.2'
 }
 
 application {
-    mainClass = 'ru.mentee.power.NumberGuessGame'
+    mainClass = 'ru.mentee.power.EmployeeManagementApplication'
 }
 
-jar {
-    manifest {
-        attributes 'Main-Class': 'ru.mentee.power.NumberGuessGame'
-    }
+bootJar {
+    enabled = true
+    mainClass = 'ru.mentee.power.optimized.EmployeeManagementApplication'
 }
 
 checkstyle {
